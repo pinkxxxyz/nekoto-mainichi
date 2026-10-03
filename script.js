@@ -13,10 +13,11 @@ if (apk) {
     link.href = apk.href;
     link.removeAttribute('aria-disabled');
     link.removeAttribute('role');
+    link.removeAttribute('aria-describedby');
     link.setAttribute('download', '');
   });
   document.querySelectorAll('[data-download-status]').forEach(node => {
-    node.textContent = 'テスト版としてご利用ください。';
+    node.remove();
   });
 }
 function loadImage(src, alt, onLoad) {

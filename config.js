@@ -3,7 +3,7 @@ window.SITE_CONFIG = {
   version: '0.1.0 beta',
   // TODO: 配布する実際のAPKの相対パス、または https:// URLを設定。
   // 空のままなら、トップのダウンロードボタンは無効になります。
-  apkUrl: '',
+  apkUrl: 'https://github.com/pinkxxxyz/nekoto-mainichi/releases/download/v0.1.0-beta/app-release.apk',
   // 画像を配置したらパスを設定。空の場合はCSSの部屋を表示します。
   heroImage: '',
   heroAlt: 'ねことまいにちのアプリ画面',
