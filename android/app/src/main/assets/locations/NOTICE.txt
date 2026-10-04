@@ -1,0 +1,32 @@
+KorokkeLife 地域選択データ
+出典: Geolonia japanese-addresses-v2（元データ: デジタル庁アドレス・ベース・レジストリ）
+https://github.com/geolonia/japanese-addresses-v2
+取得元: https://japanese-addresses-v2.geoloniamaps.com/api/ja.json
+取得日: 2026-10-02
+元データ更新日時（UTC）: 2024-12-25T04:57:48+00:00
+加工: 都道府県コード/名称、市区町村コード/名称、代表点緯度/経度のみ抽出。郡名がある町村は郡名＋町村名、政令指定都市の区は市名＋区名として保持。
+各コードはチェックデジット付き6桁の文字列。元データは1898地点・47都道府県。
+更新は同じ形式を再生成し、既存コードを照合してアプリ更新時に配布する。アプリ実行時のネットワーク取得はしない。
+元ファイル SHA-256: 9a642d741607d9ce7b6624a1d2d0a499d810de4fe702410acddb0e4e94ef0a7b
+
+MIT License
+
+Copyright (c) 2024 Geolonia, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
