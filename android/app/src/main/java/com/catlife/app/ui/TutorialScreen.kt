@@ -20,15 +20,34 @@ import com.catlife.app.R
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-private data class TutorialPage(val title: String, val description: String, val extra: String? = null)
+private data class TutorialPage(
+    val title: String,
+    val paragraphs: List<String> = emptyList(),
+    val centered: Boolean = false,
+)
 private val TutorialPages = listOf(
-    TutorialPage("ようこそ", "猫と一緒に、毎日のやることや買い物を管理できます。"),
-    TutorialPage("猫との暮らし", "猫をタップすると、気まぐれに鳴いてくれます。", "設定から「猫の音声」「効果音」を変更できます。"),
-    TutorialPage("やること・買い物", "やることには期日と時間を設定できます。\n時間を設定すると、リマインダーでお知らせします。", "「買い物」では買うものを登録できます。"),
-    TutorialPage("設定", "現在地の地域設定や、データのバックアップ・インポートができます。", "バックアップはGoogle Driveなどに保存できます。"),
+    TutorialPage("ようこそ", centered = true),
+    TutorialPage("ねことの暮らし", listOf(
+        "ねこをタップすると、気まぐれに鳴き",
+        "ドラッグすると、好きな場所へ移動できます",
+        "鳴き声や効果音は、設定からON・OFFを変更できます",
+        "いつもと違う姿も見られるかも？",
+    )),
+    TutorialPage("やること・買い物", listOf(
+        "「やること」には、期日や時間を設定できます",
+        "時間を設定すると、リマインダーでお知らせします",
+        "「買い物」には、買いたいものを気軽にメモできます",
+    )),
+    TutorialPage("天気と設定", listOf(
+        "地域を設定すると、天気を表示します",
+        "設定ではデータのバックアップ・インポートもできます",
+        "バックアップしたデータは、Google Driveに保存できます",
+    )),
+    TutorialPage("始めよう！", listOf("ねことの暮らしを楽しんでください！"), centered = true),
 )
 
 @Composable
@@ -58,20 +77,38 @@ internal fun TutorialScreen(
                 tonalElevation = 2.dp,
             ) {
                 Column(Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
-                    Text("KorokkeLife", color = charcoal, style = MaterialTheme.typography.labelLarge)
                     HorizontalPager(
                         state = pager,
                         userScrollEnabled = !saving,
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                     ) { index ->
                         val page = TutorialPages[index]
-                        Column(
-                            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 28.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp),
-                        ) {
-                            Text(page.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = charcoal)
-                            Text(page.description, style = MaterialTheme.typography.bodyLarge, color = charcoal)
-                            page.extra?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = charcoal) }
+                        if (page.centered) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(
+                                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 28.dp),
+                                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(page.title, style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.Bold, color = charcoal, textAlign = TextAlign.Center)
+                                    page.paragraphs.forEach { paragraph ->
+                                        Text(paragraph, style = MaterialTheme.typography.bodyLarge,
+                                            color = charcoal, textAlign = TextAlign.Center)
+                                    }
+                                }
+                            }
+                        } else {
+                            Column(
+                                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 28.dp),
+                                verticalArrangement = Arrangement.spacedBy(24.dp),
+                            ) {
+                                Text(page.title, style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold, color = charcoal)
+                                page.paragraphs.forEach { paragraph ->
+                                    Text(paragraph, style = MaterialTheme.typography.bodyLarge, color = charcoal)
+                                }
+                            }
                         }
                     }
                     Row(

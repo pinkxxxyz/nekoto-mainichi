@@ -26,7 +26,7 @@ class TutorialSettingsTest {
 
     @Test fun merelyReadingOrLeavingIntermediatePageDoesNotComplete() = withSettings { settings ->
         assertTrue(shouldShowTutorial(settings.completed.first(), manuallyRequested = false))
-        for (page in 0..2) {
+        for (page in 0..3) {
             try { settings.complete(page); fail("intermediate page completed") } catch (_: IllegalArgumentException) { }
         }
         assertFalse(settings.completed.first())
@@ -37,7 +37,7 @@ class TutorialSettingsTest {
         val file = dir.resolve("tutorial.preferences_pb")
         val job = SupervisorJob()
         val store = PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + job), produceFile = { file })
-        TutorialSettings(store).complete(3)
+        TutorialSettings(store).complete(4)
         job.cancelAndJoin()
         val nextJob = SupervisorJob()
         try {
@@ -63,10 +63,10 @@ class TutorialSettingsTest {
     }
 
     @Test fun manualReplayDoesNotResetCompletionAndRemainsCompletedAfterFinishing() = withSettings { settings ->
-        settings.complete(3)
+        settings.complete(4)
         assertTrue(shouldShowTutorial(settings.completed.first(), manuallyRequested = true))
         assertTrue(settings.completed.first())
-        settings.complete(3)
+        settings.complete(4)
         assertTrue(settings.completed.first())
         assertFalse(shouldShowTutorial(settings.completed.first(), manuallyRequested = false))
     }

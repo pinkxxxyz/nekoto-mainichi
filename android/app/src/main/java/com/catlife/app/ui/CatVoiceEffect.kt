@@ -17,7 +17,8 @@ class CatVoiceController(
     private val chooseVoice: (Long, Int) -> CatVoice?,
     private val playVoice: (CatVoice) -> Unit,
     private val nowMillis: () -> Long = SystemClock::elapsedRealtime,
-    private val nextRoll: () -> Int = { Random.nextInt(100) }
+    private val nextRoll: () -> Int = { Random.nextInt(100) },
+    private val chooseGroomingVoice: (Long) -> CatVoice? = { null }
 ) {
     fun choose(enabled: Boolean): CatVoice? {
         if (!enabled) return null
@@ -25,6 +26,11 @@ class CatVoiceController(
     }
 
     fun play(voice: CatVoice) = playVoice(voice)
+
+    fun playGrooming(enabled: Boolean) {
+        if (!enabled) return
+        chooseGroomingVoice(nowMillis())?.let(::play)
+    }
 }
 
 private class CatVoicePlayer(context: Context) {
@@ -47,11 +53,12 @@ private class CatVoicePlayer(context: Context) {
             android.util.Log.d("CatVoiceAudio", "LOAD sample=$sampleId status=$status voice=$voice")
             if (status == 0 && voice != null) loadedSounds[voice] = sampleId
         }
-        load(context, CatVoice.AA, R.raw.aa)
+        load(context, CatVoice.CAT20, R.raw.cat20)
         load(context, CatVoice.MYAAON, R.raw.myaaon)
-        load(context, CatVoice.NN, R.raw.nn)
+        load(context, CatVoice.CAT31, R.raw.cat31)
         load(context, CatVoice.NYAA, R.raw.nyaa)
         load(context, CatVoice.UNSATISFIED, R.raw.unsatisfied_cat)
+        load(context, CatVoice.GROOMING_ANGRY, R.raw.grooming_angry)
     }
 
     private fun load(context: Context, voice: CatVoice, resourceId: Int) {
@@ -78,5 +85,5 @@ fun rememberCatVoiceController(): CatVoiceController {
     DisposableEffect(player) {
         onDispose { player.release() }
     }
-    return remember(player, policy) { CatVoiceController(policy::choose, player::play) }
+    return remember(player, policy) { CatVoiceController(policy::choose, player::play, chooseGroomingVoice = policy::chooseGrooming) }
 }

@@ -66,5 +66,7 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     testImplementation("junit:junit:4.13.2")
+    // JVM equivalent of Android's org.json for parsing tests only.
+    testImplementation("org.json:json:20250517")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

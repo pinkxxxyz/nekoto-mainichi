@@ -87,14 +87,14 @@ class DomainTest {
         val expectedAtBoundary = listOf(
             0 to null,
             29 to null,
-            30 to CatVoice.AA,
-            49 to CatVoice.AA,
-            50 to CatVoice.NN,
-            69 to CatVoice.NN,
-            70 to CatVoice.NYAA,
-            84 to CatVoice.NYAA,
-            85 to CatVoice.MYAAON,
-            96 to CatVoice.MYAAON,
+            30 to CatVoice.MYAAON,
+            46 to CatVoice.MYAAON,
+            47 to CatVoice.NYAA,
+            63 to CatVoice.NYAA,
+            64 to CatVoice.CAT20,
+            80 to CatVoice.CAT20,
+            81 to CatVoice.CAT31,
+            96 to CatVoice.CAT31,
             97 to CatVoice.UNSATISFIED,
             99 to CatVoice.UNSATISFIED
         )
@@ -112,7 +112,7 @@ class DomainTest {
         var chooseCount = 0
         val playedVoices = mutableListOf<CatVoice>()
         val controller = CatVoiceController(
-            chooseVoice = { _, _ -> chooseCount++; CatVoice.AA },
+            chooseVoice = { _, _ -> chooseCount++; CatVoice.MYAAON },
             playVoice = playedVoices::add,
             nowMillis = { 1_000L },
             nextRoll = { 30 }
@@ -162,9 +162,9 @@ class DomainTest {
     @Test fun catVoicePolicyBlocksOverlappingTapSoundsDuringCooldown() {
         val policy = CatVoicePolicy(cooldownMillis = 900)
 
-        assertEquals(CatVoice.NYAA, policy.choose(nowMillis = 1_000, roll = 70))
-        assertNull(policy.choose(nowMillis = 1_899, roll = 70))
-        assertEquals(CatVoice.NYAA, policy.choose(nowMillis = 1_900, roll = 70))
+        assertEquals(CatVoice.NYAA, policy.choose(nowMillis = 1_000, roll = 50))
+        assertNull(policy.choose(nowMillis = 1_899, roll = 50))
+        assertEquals(CatVoice.NYAA, policy.choose(nowMillis = 1_900, roll = 50))
     }
 
     @Test fun decisionSoundPlaysOnceWhenEnabled() {

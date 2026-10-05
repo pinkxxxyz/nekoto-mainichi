@@ -17,7 +17,7 @@ class LocationSettings(private val store: DataStore<Preferences>, val catalog: L
         val values = settings.asMap()
         val prefecture = values[WeatherPrefectureCodeKey] as? String
         val municipality = values[WeatherMunicipalityCodeKey] as? String
-        if (prefecture == null || municipality == null) null
+        if (prefecture == null || municipality == null) catalog?.findDisplayName(settings[WeatherLocationKey])
         else catalog?.find(prefecture, municipality)?.takeIf {
             it.prefectureName == values[WeatherPrefectureNameKey] &&
                 it.municipalityName == values[WeatherMunicipalityNameKey] &&

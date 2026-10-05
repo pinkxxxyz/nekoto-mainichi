@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 // Per-device onboarding is intentionally outside the user's backup preferences.
 val Context.korokkeLifeTutorialStore by preferencesDataStore("korokke_life_tutorial")
 val TutorialCompletedKey = booleanPreferencesKey("tutorial_completed")
-const val TUTORIAL_PAGE_COUNT = 4
+const val TUTORIAL_PAGE_COUNT = 5
 
 fun shouldShowTutorial(completed: Boolean, manuallyRequested: Boolean): Boolean = !completed || manuallyRequested
 

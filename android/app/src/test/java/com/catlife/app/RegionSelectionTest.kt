@@ -51,6 +51,19 @@ class RegionSelectionTest {
         assertNull(RegionSelectionDraft("070009").selection(data))
     }
 
+    @Test fun legacyFullDisplayNameResolvesCoordinatesWithoutRewritingPreferences() = runBlocking {
+        val dir = Files.createTempDirectory("legacy-weather-region").toFile()
+        val job = SupervisorJob()
+        try {
+            val store = PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + job), produceFile = { dir.resolve("settings.preferences_pb") })
+            val settings = LocationSettings(store, catalog())
+            settings.save("福島県 福島市")
+            val before = store.data.first()
+            assertEquals("072010", settings.selectedLocation.first()!!.municipalityCode)
+            assertEquals(before, store.data.first())
+        } finally { job.cancelAndJoin(); dir.deleteRecursively() }
+    }
+
     @Test fun structuredSelectionPersistsAndLegacyStringRemainsCompatible() = runBlocking {
         val dir = Files.createTempDirectory("region-test").toFile()
         val file = dir.resolve("settings.preferences_pb")

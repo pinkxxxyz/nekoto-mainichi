@@ -25,6 +25,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
 import androidx.compose.foundation.combinedClickable
@@ -37,9 +41,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import com.catlife.app.ui.appColorScheme
 import androidx.compose.ui.graphics.Color
@@ -65,6 +69,13 @@ import com.catlife.app.data.*
 import com.catlife.app.ui.SettingsPanel
 import com.catlife.app.ui.TutorialScreen
 import com.catlife.app.settings.TutorialSettings
+import com.catlife.app.settings.HomeGuideSettings
+import com.catlife.app.ui.HomeGuideStep
+import com.catlife.app.ui.HomeGuideBubble
+import com.catlife.app.ui.homeWeatherDisplay
+import com.catlife.app.ui.weatherIconResource
+import com.catlife.app.weather.WeatherReading
+import com.catlife.app.weather.OpenMeteoWeatherRepository
 import com.catlife.app.settings.korokkeLifeTutorialStore
 import com.catlife.app.settings.shouldShowTutorial
 import com.catlife.app.settings.LocationCatalog
@@ -178,8 +189,24 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
         LocationSettings(context.korokkeLifeDataStore, locationCatalog)
     }
     val weatherLocation by locationSettings.location.collectAsState(initial = null)
+    val weatherRepository = remember { OpenMeteoWeatherRepository() }
     val tutorialSettings = remember(context) { TutorialSettings(context.korokkeLifeTutorialStore) }
     val tutorialDone by tutorialSettings.completed.map { it as Boolean? }.collectAsState(initial = null)
+    val homeGuideSettings = remember(context) { HomeGuideSettings(context.korokkeLifeTutorialStore) }
+    val homeGuideDone by homeGuideSettings.completed.collectAsState(initial = null)
+    var homeGuideStep by rememberSaveable { mutableIntStateOf(0) }
+    var savingHomeGuide by remember { mutableStateOf(false) }
+    var homeGuideError by remember { mutableStateOf(false) }
+    var homeGuideInitializationError by remember { mutableStateOf(false) }
+    var homeGuideInitializationAttempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(homeGuideSettings, homeGuideInitializationAttempt) {
+        homeGuideInitializationError = false
+        try { homeGuideSettings.initialize() }
+        catch (error: Exception) {
+            if (error is kotlinx.coroutines.CancellationException) throw error
+            homeGuideInitializationError = true
+        }
+    }
     var manualTutorial by rememberSaveable { mutableStateOf(false) }
     var savingTutorial by remember { mutableStateOf(false) }
     var tutorialError by remember { mutableStateOf<String?>(null) }
@@ -188,6 +215,11 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
     var panel by rememberSaveable { mutableStateOf<Panel?>(null) }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateAsState().value
     val catActive = lifecycle.isAtLeast(Lifecycle.State.RESUMED) && panel == null && tutorialDone == true && !manualTutorial
+    val homeVisible by rememberUpdatedState(catActive)
+    val weatherReading by produceState<WeatherReading?>(null, weatherRepository, locationSettings) {
+        weatherRepository.observe(locationSettings.selectedLocation, snapshotFlow { homeVisible })
+            .collect { value = it }
+    }
     LaunchedEffect(lifecycle, panel, tutorialDone, manualTutorial) {
         android.util.Log.d("CatAction", "ACTIVE INPUT active=$catActive lifecycle=$lifecycle panel=$panel tutorialDone=$tutorialDone manualTutorial=$manualTutorial")
     }
@@ -195,9 +227,11 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
     val decisionSound = rememberDecisionSoundController()
     val playDecisionSound = { decisionSound.play(soundEnabled) }
 
-    if (tutorialDone == null) {
+    if (tutorialDone == null || homeGuideDone == null) {
         Box(Modifier.fillMaxSize().background(colorResource(R.color.home_background)), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            if (homeGuideInitializationError) {
+                TextButton(onClick = { homeGuideInitializationAttempt++ }) { Text("案内設定を再読み込み") }
+            } else CircularProgressIndicator()
         }
         return
     }
@@ -231,7 +265,25 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
             catActive = catActive,
             catVoiceEnabled = catVoiceEnabled,
             tutorial = false,
-            weatherLocation = weatherLocation
+            weatherLocation = weatherLocation,
+            weatherReading = weatherReading,
+            guideStep = if (homeGuideDone == false && panel == null) HomeGuideStep.entries[homeGuideStep] else null,
+            savingGuide = savingHomeGuide,
+            guideError = homeGuideError,
+            onGuideNext = {
+                if (homeGuideStep < HomeGuideStep.entries.lastIndex) homeGuideStep++
+                else if (!savingHomeGuide) {
+                    savingHomeGuide = true
+                    homeGuideError = false
+                    scope.launch {
+                        try { homeGuideSettings.complete() }
+                        catch (error: Exception) {
+                            if (error is kotlinx.coroutines.CancellationException) throw error
+                            homeGuideError = true
+                        } finally { savingHomeGuide = false }
+                    }
+                }
+            },
         )
         when (panel) {
             Panel.TODO -> TodoPanel(vm, playDecisionSound) { panel = null }
@@ -264,9 +316,19 @@ private fun Home(
     catActive: Boolean,
     catVoiceEnabled: Boolean,
     tutorial: Boolean,
-    weatherLocation: String?
+    weatherLocation: String?,
+    weatherReading: WeatherReading?,
+    guideStep: HomeGuideStep?,
+    savingGuide: Boolean,
+    guideError: Boolean,
+    onGuideNext: () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize()) {
+    val weather = homeWeatherDisplay(weatherReading)
+    var homeBounds by remember { mutableStateOf(Rect.Zero) }
+    var todoBounds by remember { mutableStateOf<Rect?>(null) }
+    var shoppingBounds by remember { mutableStateOf<Rect?>(null) }
+    var settingsBounds by remember { mutableStateOf<Rect?>(null) }
+    Box(Modifier.fillMaxSize().onGloballyPositioned { homeBounds = it.boundsInRoot() }) {
         Image(
             painter = painterResource(R.drawable.cozy_reading_room),
             contentDescription = null,
@@ -291,7 +353,7 @@ private fun Home(
             ) {
                 IconButton(
                     onClick = onSettings,
-                    modifier = Modifier.size(52.dp)
+                    modifier = Modifier.size(52.dp).onGloballyPositioned { settingsBounds = it.boundsInRoot() }
                 ) {
                     Image(
                         painter = painterResource(R.drawable.settings_gears),
@@ -316,17 +378,22 @@ private fun Home(
                                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "☀",
-                                    fontFamily = KorokkeFont,
-                                    fontSize = 27.sp,
-                                    color = Color(0xFFE49A25)
-                                )
+                                Box {
+                                    // Retain the original 27sp glyph's layout footprint.
+                                    Text("☀", fontFamily = KorokkeFont, fontSize = 27.sp,
+                                        color = Color.Transparent, modifier = Modifier.clearAndSetSemantics {})
+                                    Icon(
+                                        painter = painterResource(weatherIconResource(weather.weatherCondition)),
+                                        contentDescription = null,
+                                        modifier = Modifier.matchParentSize(),
+                                        tint = if (weather.showWeatherIcon) Color(0xFFE49A25) else Color.Transparent,
+                                    )
+                                }
                                 Spacer(Modifier.width(7.dp))
-                                Text("晴れ", fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                                Text(weather.condition, fontSize = 19.sp, fontWeight = FontWeight.Bold)
                             }
                             Spacer(Modifier.height(2.dp))
-                            Text("24℃", fontSize = 36.sp, fontWeight = FontWeight.Bold)
+                            Text(weather.currentTemperature, fontSize = 36.sp, fontWeight = FontWeight.Bold)
                             Text("現在気温", fontSize = 12.sp, color = colorResource(R.color.ui_muted_content))
                         }
                         VerticalDivider(
@@ -336,11 +403,11 @@ private fun Home(
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Column {
                                 Text("最高", fontSize = 12.sp, color = Color(0xFF9A5C43))
-                                Text("27℃", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Text(weather.highTemperature, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             }
                             Column {
                                 Text("最低", fontSize = 12.sp, color = Color(0xFF557080))
-                                Text("18℃", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                Text(weather.lowTemperature, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -364,19 +431,34 @@ private fun Home(
                 )
                 Button(
                     onClick = onTodo,
-                    modifier = Modifier.weight(1f).height(58.dp),
+                    modifier = Modifier.weight(1f).height(58.dp).onGloballyPositioned { todoBounds = it.boundsInRoot() },
                     shape = RoundedCornerShape(18.dp),
                     colors = buttonColors,
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                 ) { Text("やること", fontSize = 18.sp) }
                 Button(
                     onClick = onShopping,
-                    modifier = Modifier.weight(1f).height(58.dp),
+                    modifier = Modifier.weight(1f).height(58.dp).onGloballyPositioned { shoppingBounds = it.boundsInRoot() },
                     shape = RoundedCornerShape(18.dp),
                     colors = buttonColors,
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                 ) { Text("買い物", fontSize = 18.sp) }
             }
+        }
+        val guideTarget = when (guideStep) {
+            HomeGuideStep.TODO -> todoBounds
+            HomeGuideStep.SHOPPING -> shoppingBounds
+            HomeGuideStep.SETTINGS -> settingsBounds
+            null -> null
+        }
+        if (guideStep != null && guideTarget != null) {
+            HomeGuideBubble(
+                step = guideStep,
+                target = guideTarget.translate(Offset(-homeBounds.left, -homeBounds.top)),
+                saving = savingGuide,
+                error = guideError,
+                onNext = onGuideNext,
+            )
         }
     }
 }
@@ -637,12 +719,21 @@ private fun CatLayer(active: Boolean, forcedSitting: Boolean, catVoiceEnabled: B
                         "KorokkeTap",
                         "STATE active=$active mode=$catMode voice=$catVoiceEnabled"
                     )
-                    if (hitResult?.node != null && active && catMode == CatMode.WALKING) {
-                        android.util.Log.d("KorokkeTap", "VOICE PLAY")
-                        val selectedVoice = catVoice.choose(catVoiceEnabled)
-                        if (selectedVoice != null) {
-                            pendingVoice = selectedVoice
-                            changeMode(CatMode.MEOWING, "cat_tap")
+                    if (hitResult?.node != null && active) {
+                        when (catMode) {
+                            CatMode.WALKING -> {
+                                android.util.Log.d("KorokkeTap", "VOICE PLAY")
+                                val selectedVoice = catVoice.choose(catVoiceEnabled)
+                                if (selectedVoice != null) {
+                                    pendingVoice = selectedVoice
+                                    changeMode(CatMode.MEOWING, "cat_tap")
+                                }
+                            }
+                            CatMode.GROOMING -> {
+                                // Audio only: keep the grooming state, pose and timer untouched.
+                                catVoice.playGrooming(catVoiceEnabled)
+                            }
+                            else -> Unit
                         }
                     }
                 }
