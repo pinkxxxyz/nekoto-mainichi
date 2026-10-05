@@ -130,9 +130,6 @@ internal fun SettingsPanel(
                     Text("Google Driveなどからデータを復元", style = MaterialTheme.typography.bodySmall)
                 }
             }
-            TextButton(onClick = onShowTutorial, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                Text("チュートリアルを見る")
-            }
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         }

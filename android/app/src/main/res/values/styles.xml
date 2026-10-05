@@ -1,7 +1,7 @@
 <resources>
     <style name="Theme.KorokkeLife" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#496A92</item>
-        <item name="android:navigationBarColor">#F6EEDC</item>
+        <item name="android:colorAccent">@color/home_button_background</item>
+        <item name="android:navigationBarColor">@color/home_background</item>
     </style>
 </resources>

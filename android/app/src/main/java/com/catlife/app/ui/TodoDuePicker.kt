@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import com.catlife.app.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -49,10 +51,6 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
-private val DueBrown = Color(0xFF755A42)
-private val DueCream = Color(0xFFFFF7E9)
-private val DueSelected = Color(0xFFFFDDA3)
-private val DueSelectedText = Color(0xFF5B402E)
 private val TimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
 internal fun selectedTimeWheelIndex(
@@ -119,7 +117,7 @@ internal fun TodoDatePickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.width(340.dp),
-            color = DueCream,
+            color = colorResource(R.color.home_card_background),
             shape = RoundedCornerShape(22.dp),
             tonalElevation = 4.dp,
         ) {
@@ -130,21 +128,21 @@ internal fun TodoDatePickerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     TextButton(onClick = { displayedMonth = displayedMonth.minusMonths(1) }) {
-                        Text("‹", fontSize = 26.sp, color = DueBrown)
+                        Text("‹", fontSize = 26.sp, color = colorResource(R.color.home_button_background))
                     }
                     Text(
                         "${displayedMonth.year}年 ${displayedMonth.monthValue}月",
                         fontWeight = FontWeight.Bold,
-                        color = DueBrown,
+                        color = colorResource(R.color.home_button_background),
                     )
                     TextButton(onClick = { displayedMonth = displayedMonth.plusMonths(1) }) {
-                        Text("›", fontSize = 26.sp, color = DueBrown)
+                        Text("›", fontSize = 26.sp, color = colorResource(R.color.home_button_background))
                     }
                 }
                 Row(Modifier.fillMaxWidth()) {
                     listOf("月", "火", "水", "木", "金", "土", "日").forEach { label ->
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            Text(label, fontSize = 12.sp, color = DueBrown.copy(alpha = 0.75f))
+                            Text(label, fontSize = 12.sp, color = colorResource(R.color.home_button_background).copy(alpha = 0.75f))
                         }
                     }
                 }
@@ -166,11 +164,11 @@ internal fun TodoDatePickerDialog(
                                             .size(32.dp)
                                             .then(
                                                 if (isToday && !isSelected) {
-                                                    Modifier.border(1.dp, DueBrown, RoundedCornerShape(12.dp))
+                                                    Modifier.border(1.dp, colorResource(R.color.home_button_background), RoundedCornerShape(12.dp))
                                                 } else Modifier
                                             )
                                             .background(
-                                                if (isSelected) DueSelected else Color.Transparent,
+                                                if (isSelected) colorResource(R.color.ui_selection_background) else Color.Transparent,
                                                 RoundedCornerShape(12.dp),
                                             )
                                             .clickable { onDateSelected(date) },
@@ -178,7 +176,7 @@ internal fun TodoDatePickerDialog(
                                     ) {
                                         Text(
                                             day.toString(),
-                                            color = DueBrown,
+                                            color = colorResource(R.color.home_button_background),
                                             fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
                                         )
                                     }
@@ -188,8 +186,8 @@ internal fun TodoDatePickerDialog(
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = onClear) { Text("期日をクリア", color = DueBrown) }
-                    TextButton(onClick = onDismiss) { Text("閉じる", color = DueBrown) }
+                    TextButton(onClick = onClear) { Text("期日をクリア", color = colorResource(R.color.home_button_background)) }
+                    TextButton(onClick = onDismiss) { Text("閉じる", color = colorResource(R.color.home_button_background)) }
                 }
             }
         }
@@ -216,7 +214,7 @@ internal fun TodoTimePickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth().widthIn(max = 310.dp),
-            color = DueCream,
+            color = colorResource(R.color.home_card_background),
             shape = RoundedCornerShape(22.dp),
             tonalElevation = 4.dp,
         ) {
@@ -225,14 +223,14 @@ internal fun TodoTimePickerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(title, fontWeight = FontWeight.Bold, color = DueBrown, fontSize = 20.sp)
+                Text(title, fontWeight = FontWeight.Bold, color = colorResource(R.color.home_button_background), fontSize = 20.sp)
                 Box(
                     modifier = Modifier.width(220.dp).height(120.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
                         Modifier.fillMaxWidth().height(42.dp)
-                            .background(DueSelected.copy(alpha = 0.72f), RoundedCornerShape(14.dp)),
+                            .background(colorResource(R.color.ui_outline), RoundedCornerShape(14.dp)),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TimeWheel(
@@ -240,7 +238,7 @@ internal fun TodoTimePickerDialog(
                             state = hourState,
                         )
                         Box(Modifier.width(36.dp), contentAlignment = Alignment.Center) {
-                            Text("：", color = DueSelectedText, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+                            Text("：", color = colorResource(R.color.home_button_background), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
                         }
                         TimeWheel(
                             values = minuteValues,
@@ -250,11 +248,11 @@ internal fun TodoTimePickerDialog(
                 }
                 Row(Modifier.width(220.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.width(92.dp), contentAlignment = Alignment.Center) {
-                        Text("時", color = DueBrown.copy(alpha = 0.68f), fontSize = 12.sp)
+                        Text("時", color = colorResource(R.color.home_button_background).copy(alpha = 0.68f), fontSize = 12.sp)
                     }
                     Spacer(Modifier.width(36.dp))
                     Box(Modifier.width(92.dp), contentAlignment = Alignment.Center) {
-                        Text("分", color = DueBrown.copy(alpha = 0.68f), fontSize = 12.sp)
+                        Text("分", color = colorResource(R.color.home_button_background).copy(alpha = 0.68f), fontSize = 12.sp)
                     }
                 }
                 if (allowNoTime) {
@@ -264,7 +262,7 @@ internal fun TodoTimePickerDialog(
                     ) {
                         Text(
                             "時間は指定しない",
-                            color = DueBrown,
+                            color = colorResource(R.color.home_button_background),
                             fontWeight = FontWeight.Medium,
                             textDecoration = TextDecoration.Underline,
                         )
@@ -275,7 +273,7 @@ internal fun TodoTimePickerDialog(
                         onClick = onDismiss,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
-                        Text("戻る", color = DueBrown, fontWeight = FontWeight.Medium)
+                        Text("戻る", color = colorResource(R.color.home_button_background), fontWeight = FontWeight.Medium)
                     }
                     TextButton(
                         onClick = {
@@ -287,8 +285,8 @@ internal fun TodoTimePickerDialog(
                         modifier = Modifier.heightIn(min = 48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                            containerColor = DueSelected.copy(alpha = 0.72f),
-                            contentColor = DueSelectedText,
+                            containerColor = colorResource(R.color.home_button_background),
+                            contentColor = colorResource(R.color.home_button_content),
                         ),
                     ) {
                         Text("確定", fontWeight = FontWeight.SemiBold)
@@ -329,7 +327,7 @@ private fun TimeWheel(
                         "%02d".format(value),
                         fontSize = if (index == selectedIndex) 24.sp else 17.sp,
                         fontWeight = if (index == selectedIndex) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (index == selectedIndex) DueSelectedText else DueBrown.copy(alpha = 0.72f),
+                        color = if (index == selectedIndex) colorResource(R.color.home_button_background) else colorResource(R.color.home_button_background).copy(alpha = 0.72f),
                     )
                 }
             }

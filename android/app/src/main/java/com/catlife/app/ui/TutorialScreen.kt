@@ -15,7 +15,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import com.catlife.app.R
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +41,7 @@ internal fun TutorialScreen(
 ) {
     val pager = rememberPagerState(pageCount = { TutorialPages.size })
     val scope = rememberCoroutineScope()
-    val brown = Color(0xFF755A42)
+    val charcoal = colorResource(R.color.home_button_background)
     val controlsEnabled = !saving && !pager.isScrollInProgress
     BackHandler(enabled = pager.currentPage > 0 || manuallyOpened || saving) {
         if (!saving) {
@@ -48,16 +49,16 @@ internal fun TutorialScreen(
             else if (manuallyOpened) onCloseManual()
         }
     }
-    Surface(Modifier.fillMaxSize(), color = Color(0xFFF6EEDC)) {
+    Surface(Modifier.fillMaxSize(), color = colorResource(R.color.home_background)) {
         Box(Modifier.fillMaxSize().safeDrawingPadding().padding(20.dp), contentAlignment = Alignment.Center) {
             Surface(
                 Modifier.widthIn(max = 560.dp).fillMaxWidth().fillMaxHeight(),
-                color = Color(0xFFFFF7E9),
+                color = colorResource(R.color.home_card_background),
                 shape = RoundedCornerShape(24.dp),
                 tonalElevation = 2.dp,
             ) {
                 Column(Modifier.padding(horizontal = 24.dp, vertical = 20.dp)) {
-                    Text("KorokkeLife", color = brown, style = MaterialTheme.typography.labelLarge)
+                    Text("KorokkeLife", color = charcoal, style = MaterialTheme.typography.labelLarge)
                     HorizontalPager(
                         state = pager,
                         userScrollEnabled = !saving,
@@ -68,9 +69,9 @@ internal fun TutorialScreen(
                             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 28.dp),
                             verticalArrangement = Arrangement.spacedBy(24.dp),
                         ) {
-                            Text(page.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = brown)
-                            Text(page.description, style = MaterialTheme.typography.bodyLarge, color = brown)
-                            page.extra?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = brown) }
+                            Text(page.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = charcoal)
+                            Text(page.description, style = MaterialTheme.typography.bodyLarge, color = charcoal)
+                            page.extra?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = charcoal) }
                         }
                     }
                     Row(
@@ -79,7 +80,7 @@ internal fun TutorialScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                     ) {
                         repeat(TutorialPages.size) { index ->
-                            Box(Modifier.size(9.dp).background(if (index == pager.currentPage) brown else brown.copy(alpha = 0.2f), CircleShape))
+                            Box(Modifier.size(9.dp).background(if (index == pager.currentPage) charcoal else charcoal.copy(alpha = 0.2f), CircleShape))
                         }
                     }
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp)) }
@@ -93,7 +94,7 @@ internal fun TutorialScreen(
                                 if (pager.currentPage == TutorialPages.lastIndex) onFinish(pager.currentPage)
                                 else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = brown),
+                            colors = ButtonDefaults.buttonColors(containerColor = charcoal),
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
                         ) {
                             Text(if (pager.currentPage == TutorialPages.lastIndex) "はじめる" else "次へ")

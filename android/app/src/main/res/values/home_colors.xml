@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared app palette (originally introduced for home); use the same RGB HEX values on iOS. -->
+    <color name="home_background">#F5F5F3</color>
+    <color name="home_button_background">#424441</color>
+    <color name="home_button_content">#F8F8F6</color>
+    <color name="home_card_background">#F8F8F6</color>
+    <color name="ui_selection_background">#E5E5E2</color>
+    <color name="ui_muted_content">#62645F</color>
+    <color name="ui_outline">#D1D1CD</color>
+</resources>

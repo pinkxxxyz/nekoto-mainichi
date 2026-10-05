@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><color name="nekoto_launcher_background">#F6EEDC</color></resources>
+<resources><color name="nekoto_launcher_background">@color/home_background</color></resources>

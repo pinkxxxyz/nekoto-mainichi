@@ -26,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -37,6 +38,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import com.catlife.app.ui.appColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -105,7 +110,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(
-                colorScheme = lightColorScheme(primary = Color(0xFF755A42)),
+                colorScheme = appColorScheme(),
                 typography = KorokkeTypography.run {
                     copy(
                         displayLarge = displayLarge.copy(fontFamily = KorokkeFont),
@@ -125,7 +130,11 @@ class MainActivity : ComponentActivity() {
                         labelSmall = labelSmall.copy(fontFamily = KorokkeFont)
                     )
                 }
-            ) { KorokkeLifeApp() }
+            ) {
+                CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+                    KorokkeLifeApp()
+                }
+            }
         }
     }
 }
@@ -149,7 +158,7 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
         }
     }
     if (!recoveryReady || recoveryRequired) {
-        Box(Modifier.fillMaxSize().background(Color(0xFFF6EEDC)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(colorResource(R.color.home_background)), contentAlignment = Alignment.Center) {
             Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (recoveryError == null) CircularProgressIndicator()
                 else {
@@ -187,7 +196,7 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
     val playDecisionSound = { decisionSound.play(soundEnabled) }
 
     if (tutorialDone == null) {
-        Box(Modifier.fillMaxSize().background(Color(0xFFF6EEDC)), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().background(colorResource(R.color.home_background)), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
@@ -214,7 +223,7 @@ private fun KorokkeLifeApp(vm: MainViewModel = viewModel()) {
         )
         return
     }
-    Box(Modifier.fillMaxSize().background(Color(0xFFF6EEDC))) {
+    Box(Modifier.fillMaxSize().background(colorResource(R.color.home_background))) {
         Home(
             onTodo = { playDecisionSound(); panel = Panel.TODO },
             onShopping = { playDecisionSound(); panel = Panel.SHOPPING },
@@ -293,7 +302,7 @@ private fun Home(
                 }
                 Card(
                     modifier = Modifier.width(226.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9ED).copy(alpha = .92f)),
+                    colors = CardDefaults.cardColors(containerColor = colorResource(R.color.home_card_background).copy(alpha = .92f)),
                     shape = RoundedCornerShape(22.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
@@ -318,11 +327,11 @@ private fun Home(
                             }
                             Spacer(Modifier.height(2.dp))
                             Text("24℃", fontSize = 36.sp, fontWeight = FontWeight.Bold)
-                            Text("現在気温", fontSize = 12.sp, color = Color(0xFF715E4E))
+                            Text("現在気温", fontSize = 12.sp, color = colorResource(R.color.ui_muted_content))
                         }
                         VerticalDivider(
                             Modifier.height(72.dp).padding(horizontal = 10.dp),
-                            color = Color(0xFFD8C8B5)
+                            color = colorResource(R.color.ui_outline)
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Column {
@@ -350,8 +359,8 @@ private fun Home(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 val buttonColors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF755A42).copy(alpha = .94f),
-                    contentColor = Color(0xFFFFFAF0)
+                    containerColor = colorResource(R.color.home_button_background).copy(alpha = .94f),
+                    contentColor = colorResource(R.color.home_button_content)
                 )
                 Button(
                     onClick = onTodo,
@@ -648,10 +657,20 @@ private fun CatLayer(active: Boolean, forcedSitting: Boolean, catVoiceEnabled: B
 internal fun PanelShell(title: String, onClose: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         BoxWithConstraints(Modifier.fillMaxWidth(.92f).aspectRatio(16f / 9f)) {
+            val panelBackground = colorResource(R.color.home_card_background)
             Image(
                 painter = painterResource(R.drawable.dialog_frame),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().drawWithContent {
+                    drawContent()
+                    // Recolor only the interior of the 1920 x 1080 frame asset.
+                    // Keep its decorative lines and their original geometry intact.
+                    drawRect(
+                        color = panelBackground,
+                        topLeft = Offset(size.width * 110f / 1920f, size.height * 110f / 1080f),
+                        size = Size(size.width * 1700f / 1920f, size.height * 860f / 1080f),
+                    )
+                },
                 contentScale = ContentScale.Fit
             )
             // The frame lines sit at about 5.3% horizontally and 9.4% vertically.
@@ -691,8 +710,8 @@ private fun TodoPanel(vm: MainViewModel, playDecisionSound: () -> Unit, onClose:
                 onClick = { adding = true },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 8.dp).size(56.dp),
                 shape = CircleShape,
-                containerColor = Color(0xFFFFE8BE),
-                contentColor = Color(0xFF755A42),
+                containerColor = colorResource(R.color.ui_selection_background),
+                contentColor = colorResource(R.color.home_button_background),
                 elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 3.dp, pressedElevation = 6.dp)
             ) { Text("＋", fontSize = 26.sp) }
         }
@@ -726,8 +745,8 @@ private fun ShoppingPanel(vm: MainViewModel, playDecisionSound: () -> Unit, onCl
                 onClick = { adding = true },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 8.dp).size(56.dp),
                 shape = CircleShape,
-                containerColor = Color(0xFFFFE8BE),
-                contentColor = Color(0xFF755A42),
+                containerColor = colorResource(R.color.ui_selection_background),
+                contentColor = colorResource(R.color.home_button_background),
                 elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 3.dp, pressedElevation = 6.dp)
             ) { Text("＋", fontSize = 26.sp) }
         }
@@ -837,8 +856,8 @@ private fun TodoEditor(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (reminderEnabled) Color(0xFFFFE8BE) else Color.Transparent,
-                    contentColor = Color(0xFF755A42),
+                    containerColor = if (reminderEnabled) colorResource(R.color.ui_selection_background) else Color.Transparent,
+                    contentColor = colorResource(R.color.home_button_background),
                 ),
             ) {
                 Column(Modifier.fillMaxWidth()) {
